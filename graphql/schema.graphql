@@ -1,0 +1,55 @@
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  vehicles: [Vehicle!]! @hasMany
+}
+
+type Vehicle {
+  id: ID!
+  registration_number: String!
+  year_of_manufacture: String!
+  vehicle_type: String!
+  tonnage: String!
+  user: User! @belongsTo(relation: "user")
+}
+
+type Query {
+  currentUser: User @auth(guard: "api")
+}
+
+type Mutation {
+  createUser(
+    name: String!
+    email: String! @rules(apply: ["email", "unique:users"])
+    password: String! @bcrypt @rules(apply: ["min:6"])
+  ): User @create
+  
+  login(
+    email: String! 
+    password: String!
+  ): String @field(resolver: "AuthMutator@login")
+
+  logout: String 
+    @field(resolver: "AuthMutator@logout")
+    @middleware(checks: ["auth:api"])
+
+  createVehicle(
+    registration_number: String!,
+    year_of_manufacture: String!,
+    vehicle_type: String!,
+    tonnage: String!,
+    ): Vehicle 
+    @field(resolver: "VehicleMutator@create")
+    @middleware(checks: ["auth:api"])
+
+updateVehicle(
+        id: ID!,
+        vehicle_type: String,
+        tonnage: String
+        ) : Vehicle
+        @field(resolver: "VehicleMutator@update")
+        @middleware(checks: ["auth:api"])
+
+}
+
